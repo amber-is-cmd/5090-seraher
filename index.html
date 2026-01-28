@@ -85,6 +85,19 @@
             color: white;
         }
 
+        .btn-open-all {
+            background: linear-gradient(90deg, #f6ad55, #ed8936);
+            color: #1a1a2e;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 15px 30px;
+        }
+
+        .btn-open-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(246, 173, 85, 0.5);
+        }
+
         .status-bar {
             display: flex;
             justify-content: center;
@@ -416,11 +429,16 @@
                 Start Auto-Check (1s)
             </button>
             <button class="btn btn-secondary" onclick="checkAllStores()">
-                Check Now
+                Try Fetch Data
             </button>
-            <button class="btn btn-secondary" onclick="openAllStores()">
-                Open All Stores
+            <button class="btn btn-open-all" onclick="openAllStores()">
+                OPEN ALL STORES
             </button>
+        </div>
+
+        <div style="text-align: center; margin: 15px 0; padding: 15px; background: rgba(255,200,0,0.1); border-radius: 10px; border: 1px solid rgba(255,200,0,0.3);">
+            <p style="color: #ffd700; margin-bottom: 10px;"><strong>Note:</strong> Most retailers block automated data fetching.</p>
+            <p style="color: #aaa;">Click <strong>"OPEN ALL STORES"</strong> to check each store in new tabs - this is the most reliable method!</p>
         </div>
 
         <div class="status-bar">
@@ -512,12 +530,12 @@
 
     <script>
         const CORS_PROXIES = [
-            'https://api.allorigins.win/raw?url=',
-            'https://corsproxy.io/?',
-            'https://api.codetabs.com/v1/proxy?quest='
+            { url: 'https://api.allorigins.win/raw?url=', encode: true },
+            { url: 'https://corsproxy.io/?', encode: true },
+            { url: 'https://api.codetabs.com/v1/proxy?quest=', encode: true },
+            { url: 'https://crossorigin.me/', encode: false },
+            { url: 'https://cors.eu.org/', encode: false }
         ];
-
-        let currentProxyIndex = 0;
 
         const stores = {
             bestbuy: {
@@ -544,20 +562,43 @@
         let totalProducts = 0;
 
         async function fetchWithProxy(url) {
-            const proxy = CORS_PROXIES[currentProxyIndex];
-            try {
-                const response = await fetch(proxy + encodeURIComponent(url), {
-                    headers: {
-                        'Accept': 'text/html,application/json'
+            let lastError;
+
+            for (let i = 0; i < CORS_PROXIES.length; i++) {
+                const proxy = CORS_PROXIES[i];
+                const fullUrl = proxy.encode
+                    ? proxy.url + encodeURIComponent(url)
+                    : proxy.url + url;
+
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+                    const response = await fetch(fullUrl, {
+                        signal: controller.signal,
+                        headers: {
+                            'Accept': 'text/html,application/json,*/*'
+                        }
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
                     }
-                });
-                if (!response.ok) throw new Error('Fetch failed');
-                return await response.text();
-            } catch (e) {
-                // Try next proxy
-                currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
-                throw e;
+
+                    const text = await response.text();
+                    if (text && text.length > 100) {
+                        return text;
+                    }
+                    throw new Error('Empty response');
+                } catch (e) {
+                    console.log(`Proxy ${i} failed for ${url}:`, e.message);
+                    lastError = e;
+                }
             }
+
+            throw lastError || new Error('All proxies failed');
         }
 
         function setStoreStatus(store, status, message) {
@@ -614,30 +655,50 @@
             try {
                 // Try API first
                 const data = await fetchWithProxy(stores.bestbuy.apiUrl);
-                const json = JSON.parse(data);
+                let products = [];
 
-                const products = [];
-                if (json.products) {
-                    for (const p of json.products) {
-                        if (p.name && p.name.toLowerCase().includes('5090')) {
-                            products.push({
-                                name: p.name,
-                                price: p.salePrice ? `$${p.salePrice.toLocaleString()} CAD` : (p.regularPrice ? `$${p.regularPrice.toLocaleString()} CAD` : 'N/A'),
-                                available: p.isAvailableOnline || p.isAvailable || false,
-                                url: `https://www.bestbuy.ca${p.productUrl || ''}`
-                            });
+                try {
+                    const json = JSON.parse(data);
+                    if (json.products) {
+                        for (const p of json.products) {
+                            if (p.name && (p.name.toLowerCase().includes('5090') || p.name.toLowerCase().includes('rtx 50'))) {
+                                products.push({
+                                    name: p.name,
+                                    price: p.salePrice ? `$${p.salePrice.toLocaleString()} CAD` : (p.regularPrice ? `$${p.regularPrice.toLocaleString()} CAD` : 'N/A'),
+                                    available: p.isAvailableOnline || p.isAvailable || false,
+                                    url: `https://www.bestbuy.ca${p.productUrl || ''}`
+                                });
+                            }
                         }
                     }
+                } catch (parseErr) {
+                    // If JSON parse fails, try HTML parsing
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(data, 'text/html');
+                    const items = doc.querySelectorAll('[class*="product"], [class*="item"]');
+                    items.forEach(item => {
+                        const text = item.textContent;
+                        if (text.toLowerCase().includes('5090')) {
+                            const priceMatch = text.match(/\$[\d,]+\.?\d*/);
+                            products.push({
+                                name: text.substring(0, 80).trim(),
+                                price: priceMatch ? priceMatch[0] + ' CAD' : 'N/A',
+                                available: null,
+                                url: stores.bestbuy.url
+                            });
+                        }
+                    });
                 }
 
                 renderProducts('bestbuy', products);
                 setStoreStatus('bestbuy', 'success', `Found ${products.length} products`);
             } catch (e) {
                 console.error('Best Buy error:', e);
-                setStoreStatus('bestbuy', 'error', 'Error - Click to open store');
+                setStoreStatus('bestbuy', 'error', 'Proxy blocked - Open store');
                 document.getElementById('bestbuy-products').innerHTML = `
                     <div class="no-products">
-                        Could not fetch data. <a href="${stores.bestbuy.url}" target="_blank" style="color: #76b900;">Open Best Buy directly</a>
+                        Retailers block automated requests.<br><br>
+                        <a href="${stores.bestbuy.url}" target="_blank" class="btn btn-primary" style="text-decoration:none;">Open Best Buy Canada</a>
                     </div>`;
             }
         }
@@ -651,19 +712,19 @@
                 const doc = parser.parseFromString(html, 'text/html');
 
                 const products = [];
-                const items = doc.querySelectorAll('.item-cell, .item-container, [class*="item-cell"]');
+                const items = doc.querySelectorAll('.item-cell, .item-container, [class*="item-cell"], .item-info');
 
                 items.forEach(item => {
-                    const titleEl = item.querySelector('.item-title, a[title]');
-                    const priceEl = item.querySelector('.price-current, .price-value');
+                    const titleEl = item.querySelector('.item-title, a[title], .item-brand + a');
+                    const priceEl = item.querySelector('.price-current, .price-value, [class*="price"]');
 
                     if (titleEl) {
                         const name = titleEl.textContent.trim();
-                        if (name.toLowerCase().includes('5090')) {
+                        if (name.toLowerCase().includes('5090') || name.toLowerCase().includes('rtx 50')) {
                             let price = 'N/A';
                             if (priceEl) {
-                                const priceText = priceEl.textContent.replace(/[^\d.,]/g, '');
-                                if (priceText) price = `$${priceText} CAD`;
+                                const priceMatch = priceEl.textContent.match(/[\d,]+\.?\d*/);
+                                if (priceMatch) price = `$${priceMatch[0]} CAD`;
                             }
 
                             const outOfStock = item.textContent.toLowerCase().includes('out of stock') ||
@@ -683,7 +744,7 @@
                 const scripts = doc.querySelectorAll('script');
                 scripts.forEach(script => {
                     try {
-                        if (script.textContent.includes('5090')) {
+                        if (script.textContent && script.textContent.includes('5090')) {
                             const matches = script.textContent.match(/"Title":"([^"]*5090[^"]*)"/gi);
                             if (matches && products.length === 0) {
                                 matches.forEach(m => {
@@ -704,10 +765,11 @@
                 setStoreStatus('newegg', 'success', `Found ${products.length} products`);
             } catch (e) {
                 console.error('Newegg error:', e);
-                setStoreStatus('newegg', 'error', 'Error - Click to open store');
+                setStoreStatus('newegg', 'error', 'Proxy blocked - Open store');
                 document.getElementById('newegg-products').innerHTML = `
                     <div class="no-products">
-                        Could not fetch data. <a href="${stores.newegg.url}" target="_blank" style="color: #76b900;">Open Newegg directly</a>
+                        Retailers block automated requests.<br><br>
+                        <a href="${stores.newegg.url}" target="_blank" class="btn btn-primary" style="text-decoration:none;">Open Newegg Canada</a>
                     </div>`;
             }
         }
@@ -721,22 +783,22 @@
                 const doc = parser.parseFromString(html, 'text/html');
 
                 const products = [];
-                const items = doc.querySelectorAll('[data-component-type="s-search-result"], .s-result-item');
+                const items = doc.querySelectorAll('[data-component-type="s-search-result"], .s-result-item, [data-asin]');
 
                 items.forEach(item => {
-                    const titleEl = item.querySelector('h2 span, .a-text-normal');
-                    const priceWhole = item.querySelector('.a-price-whole');
+                    const titleEl = item.querySelector('h2 span, .a-text-normal, [class*="title"]');
+                    const priceWhole = item.querySelector('.a-price-whole, [class*="price"] [class*="whole"]');
                     const priceFraction = item.querySelector('.a-price-fraction');
-                    const linkEl = item.querySelector('a.a-link-normal');
+                    const linkEl = item.querySelector('a.a-link-normal, a[href*="/dp/"]');
 
                     if (titleEl) {
                         const name = titleEl.textContent.trim();
-                        if (name.toLowerCase().includes('5090')) {
+                        if (name.toLowerCase().includes('5090') || name.toLowerCase().includes('rtx 50')) {
                             let price = 'N/A';
                             if (priceWhole) {
-                                price = `$${priceWhole.textContent.trim()}`;
+                                price = `$${priceWhole.textContent.trim().replace(/[^\d]/g, '')}`;
                                 if (priceFraction) {
-                                    price += priceFraction.textContent.trim();
+                                    price += '.' + priceFraction.textContent.trim();
                                 }
                                 price += ' CAD';
                             }
@@ -757,10 +819,11 @@
                 setStoreStatus('amazon', 'success', `Found ${products.length} products`);
             } catch (e) {
                 console.error('Amazon error:', e);
-                setStoreStatus('amazon', 'error', 'Error - Click to open store');
+                setStoreStatus('amazon', 'error', 'Proxy blocked - Open store');
                 document.getElementById('amazon-products').innerHTML = `
                     <div class="no-products">
-                        Could not fetch data. <a href="${stores.amazon.url}" target="_blank" style="color: #76b900;">Open Amazon directly</a>
+                        Retailers block automated requests.<br><br>
+                        <a href="${stores.amazon.url}" target="_blank" class="btn btn-primary" style="text-decoration:none;">Open Amazon Canada</a>
                     </div>`;
             }
         }
