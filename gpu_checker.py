@@ -2,6 +2,7 @@
 """
 NVIDIA RTX 5090 Availability Checker for Canada
 Monitors Best Buy, Newegg, and Amazon Canada for stock availability.
+Includes embedded web browser for viewing product pages.
 """
 
 import tkinter as tk
@@ -11,8 +12,23 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from datetime import datetime
-import json
-import urllib.parse
+import webbrowser
+import sys
+
+# Try to import webview for embedded browser
+try:
+    import webview
+    WEBVIEW_AVAILABLE = True
+except ImportError:
+    WEBVIEW_AVAILABLE = False
+
+# Try to import tkhtmlview for simple HTML display
+try:
+    from tkhtmlview import HTMLLabel
+    TKHTMLVIEW_AVAILABLE = True
+except ImportError:
+    TKHTMLVIEW_AVAILABLE = False
+
 
 class GPUChecker:
     """Handles checking GPU availability from various retailers."""
@@ -25,6 +41,13 @@ class GPUChecker:
         'Connection': 'keep-alive',
     }
 
+    # Store URLs for quick access
+    STORE_URLS = {
+        'Best Buy CA': 'https://www.bestbuy.ca/en-ca/search?search=rtx+5090',
+        'Newegg CA': 'https://www.newegg.ca/p/pl?d=rtx+5090',
+        'Amazon CA': 'https://www.amazon.ca/s?k=rtx+5090+graphics+card'
+    }
+
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update(self.HEADERS)
@@ -33,19 +56,14 @@ class GPUChecker:
         """Check Best Buy Canada for RTX 5090 availability."""
         results = []
         try:
-            # Best Buy Canada search URL for RTX 5090
-            url = "https://www.bestbuy.ca/en-ca/search?search=rtx+5090"
-
+            url = self.STORE_URLS['Best Buy CA']
             response = self.session.get(url, timeout=10)
             response.raise_for_status()
 
             soup = BeautifulSoup(response.text, 'html.parser')
-
-            # Look for product containers
             products = soup.find_all('div', {'class': re.compile(r'productLine|product-item|x-product')})
 
             if not products:
-                # Try API endpoint
                 api_url = "https://www.bestbuy.ca/api/v2/json/search?query=rtx%205090&lang=en-CA"
                 api_response = self.session.get(api_url, timeout=10)
                 if api_response.status_code == 200:
@@ -80,7 +98,7 @@ class GPUChecker:
                 'price': 'Error',
                 'available': None,
                 'store': 'Best Buy CA',
-                'url': 'https://www.bestbuy.ca/en-ca/search?search=rtx+5090',
+                'url': self.STORE_URLS['Best Buy CA'],
                 'error': str(e)
             })
 
@@ -90,20 +108,15 @@ class GPUChecker:
         """Check Newegg Canada for RTX 5090 availability."""
         results = []
         try:
-            # Newegg Canada search URL for RTX 5090
-            url = "https://www.newegg.ca/p/pl?d=rtx+5090"
-
+            url = self.STORE_URLS['Newegg CA']
             response = self.session.get(url, timeout=10)
             response.raise_for_status()
 
             soup = BeautifulSoup(response.text, 'html.parser')
-
-            # Look for product items
             items = soup.find_all('div', {'class': 'item-cell'})
 
             for item in items[:10]:
                 try:
-                    # Get product name
                     name_elem = item.find('a', {'class': 'item-title'})
                     if not name_elem:
                         continue
@@ -112,7 +125,6 @@ class GPUChecker:
                     if '5090' not in name.lower():
                         continue
 
-                    # Get price
                     price_elem = item.find('li', {'class': 'price-current'})
                     if price_elem:
                         price_strong = price_elem.find('strong')
@@ -126,10 +138,8 @@ class GPUChecker:
                     else:
                         price = 'N/A'
 
-                    # Check availability
                     add_to_cart = item.find('button', {'class': re.compile(r'btn-primary|add-to-cart')})
                     out_of_stock = item.find(text=re.compile(r'OUT OF STOCK|SOLD OUT', re.I))
-
                     available = add_to_cart is not None and out_of_stock is None
 
                     product_url = name_elem.get('href', url)
@@ -160,7 +170,7 @@ class GPUChecker:
                 'price': 'Error',
                 'available': None,
                 'store': 'Newegg CA',
-                'url': 'https://www.newegg.ca/p/pl?d=rtx+5090',
+                'url': self.STORE_URLS['Newegg CA'],
                 'error': str(e)
             })
 
@@ -170,20 +180,15 @@ class GPUChecker:
         """Check Amazon Canada for RTX 5090 availability."""
         results = []
         try:
-            # Amazon Canada search URL for RTX 5090
-            url = "https://www.amazon.ca/s?k=rtx+5090+graphics+card"
-
+            url = self.STORE_URLS['Amazon CA']
             response = self.session.get(url, timeout=10)
             response.raise_for_status()
 
             soup = BeautifulSoup(response.text, 'html.parser')
-
-            # Look for search results
             items = soup.find_all('div', {'data-component-type': 's-search-result'})
 
             for item in items[:10]:
                 try:
-                    # Get product name
                     name_elem = item.find('span', {'class': 'a-text-normal'})
                     if not name_elem:
                         h2 = item.find('h2')
@@ -197,7 +202,6 @@ class GPUChecker:
                     if '5090' not in name.lower():
                         continue
 
-                    # Get price
                     price_whole = item.find('span', {'class': 'a-price-whole'})
                     price_fraction = item.find('span', {'class': 'a-price-fraction'})
 
@@ -208,11 +212,9 @@ class GPUChecker:
                     else:
                         price = 'N/A'
 
-                    # Check availability
                     out_of_stock = item.find(text=re.compile(r'Currently unavailable|Out of Stock', re.I))
                     available = out_of_stock is None and price != 'N/A'
 
-                    # Get product URL
                     link = item.find('a', {'class': 'a-link-normal s-no-outline'})
                     if link:
                         product_url = 'https://www.amazon.ca' + link.get('href', '')
@@ -245,7 +247,7 @@ class GPUChecker:
                 'price': 'Error',
                 'available': None,
                 'store': 'Amazon CA',
-                'url': 'https://www.amazon.ca/s?k=rtx+5090+graphics+card',
+                'url': self.STORE_URLS['Amazon CA'],
                 'error': str(e)
             })
 
@@ -254,8 +256,6 @@ class GPUChecker:
     def check_all(self):
         """Check all retailers and return combined results."""
         all_results = []
-
-        # Run checks in parallel using threads
         threads = []
         results_lock = threading.Lock()
 
@@ -275,18 +275,39 @@ class GPUChecker:
         return all_results
 
 
+class BrowserWindow:
+    """Manages embedded browser windows using pywebview."""
+
+    def __init__(self):
+        self.windows = {}
+
+    def open_url(self, url, title="RTX 5090 - Product Page"):
+        """Open a URL in a new webview window."""
+        if WEBVIEW_AVAILABLE:
+            # Open in embedded browser
+            def create_window():
+                window = webview.create_window(title, url, width=1200, height=800)
+                webview.start()
+
+            threading.Thread(target=create_window, daemon=True).start()
+        else:
+            # Fallback to system browser
+            webbrowser.open(url)
+
+
 class GPUCheckerGUI:
     """Main GUI application for GPU availability checking."""
 
     def __init__(self, root):
         self.root = root
         self.root.title("RTX 5090 Availability Checker - Canada")
-        self.root.geometry("1000x600")
-        self.root.minsize(800, 500)
+        self.root.geometry("1200x700")
+        self.root.minsize(900, 600)
 
         self.checker = GPUChecker()
+        self.browser = BrowserWindow()
         self.is_running = False
-        self.update_interval = 1000  # 1 second in milliseconds
+        self.update_interval = 1000
 
         self.setup_ui()
 
@@ -325,61 +346,131 @@ class GPUCheckerGUI:
         self.check_now_button.pack(side=tk.LEFT, padx=5)
 
         # Interval setting
-        ttk.Label(control_frame, text="Interval (seconds):").pack(side=tk.LEFT, padx=(20, 5))
+        ttk.Label(control_frame, text="Interval (sec):").pack(side=tk.LEFT, padx=(20, 5))
         self.interval_var = tk.StringVar(value="1")
         self.interval_entry = ttk.Entry(control_frame, textvariable=self.interval_var, width=5)
         self.interval_entry.pack(side=tk.LEFT, padx=5)
-
         ttk.Button(control_frame, text="Set", command=self.set_interval).pack(side=tk.LEFT, padx=5)
 
-        # Status label
+        # Status and last check
         self.status_var = tk.StringVar(value="Ready")
         self.status_label = ttk.Label(control_frame, textvariable=self.status_var)
         self.status_label.pack(side=tk.RIGHT, padx=5)
 
-        # Last check time
         self.last_check_var = tk.StringVar(value="Last check: Never")
         ttk.Label(control_frame, textvariable=self.last_check_var).pack(side=tk.RIGHT, padx=20)
 
+        # Quick store access frame
+        store_frame = ttk.LabelFrame(main_frame, text="Quick Store Access - Click to Open in Browser", padding="5")
+        store_frame.pack(fill=tk.X, pady=(0, 10))
+
+        for store_name, store_url in GPUChecker.STORE_URLS.items():
+            btn = ttk.Button(
+                store_frame,
+                text=f"Open {store_name}",
+                command=lambda url=store_url, name=store_name: self.open_store(url, name)
+            )
+            btn.pack(side=tk.LEFT, padx=10, pady=5)
+
+        # Add "Open All" button
+        ttk.Button(
+            store_frame,
+            text="Open All Stores",
+            command=self.open_all_stores
+        ).pack(side=tk.LEFT, padx=20, pady=5)
+
+        # Browser mode indicator
+        if WEBVIEW_AVAILABLE:
+            browser_text = "Embedded browser available (pywebview)"
+        else:
+            browser_text = "Using system browser (install pywebview for embedded)"
+        ttk.Label(store_frame, text=browser_text, foreground="gray").pack(side=tk.RIGHT, padx=10)
+
+        # Create paned window for results and browser
+        paned = ttk.PanedWindow(main_frame, orient=tk.HORIZONTAL)
+        paned.pack(fill=tk.BOTH, expand=True)
+
+        # Left panel - Results
+        left_frame = ttk.Frame(paned)
+        paned.add(left_frame, weight=1)
+
+        # Results label
+        ttk.Label(left_frame, text="Search Results:", font=('Helvetica', 11, 'bold')).pack(anchor=tk.W)
+
         # Results frame with treeview
-        results_frame = ttk.Frame(main_frame)
+        results_frame = ttk.Frame(left_frame)
         results_frame.pack(fill=tk.BOTH, expand=True)
 
         # Create treeview
         columns = ('store', 'name', 'price', 'status')
         self.tree = ttk.Treeview(results_frame, columns=columns, show='headings')
 
-        # Define headings
         self.tree.heading('store', text='Store')
         self.tree.heading('name', text='Product Name')
         self.tree.heading('price', text='Price (CAD)')
-        self.tree.heading('status', text='Availability')
+        self.tree.heading('status', text='Status')
 
-        # Define column widths
-        self.tree.column('store', width=100, minwidth=80)
-        self.tree.column('name', width=500, minwidth=300)
-        self.tree.column('price', width=120, minwidth=80)
-        self.tree.column('status', width=120, minwidth=80)
+        self.tree.column('store', width=90, minwidth=70)
+        self.tree.column('name', width=300, minwidth=200)
+        self.tree.column('price', width=100, minwidth=70)
+        self.tree.column('status', width=90, minwidth=70)
 
-        # Scrollbar
         scrollbar = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
 
-        # Pack treeview and scrollbar
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # Bind double-click to open URL
-        self.tree.bind('<Double-1>', self.open_url)
+        # Bind events
+        self.tree.bind('<Double-1>', self.on_double_click)
+        self.tree.bind('<<TreeviewSelect>>', self.on_select)
 
-        # Store URLs for each item
         self.item_urls = {}
 
-        # Configure tags for coloring
-        self.tree.tag_configure('available', background='#90EE90')  # Light green
-        self.tree.tag_configure('unavailable', background='#FFB6C1')  # Light red
-        self.tree.tag_configure('unknown', background='#FFFACD')  # Light yellow
-        self.tree.tag_configure('error', background='#FFA07A')  # Light salmon
+        # Configure tags
+        self.tree.tag_configure('available', background='#90EE90')
+        self.tree.tag_configure('unavailable', background='#FFB6C1')
+        self.tree.tag_configure('unknown', background='#FFFACD')
+        self.tree.tag_configure('error', background='#FFA07A')
+
+        # Right panel - Web preview / URL info
+        right_frame = ttk.Frame(paned)
+        paned.add(right_frame, weight=1)
+
+        ttk.Label(right_frame, text="Product Details:", font=('Helvetica', 11, 'bold')).pack(anchor=tk.W)
+
+        # URL display and action buttons
+        url_frame = ttk.Frame(right_frame)
+        url_frame.pack(fill=tk.X, pady=5)
+
+        ttk.Label(url_frame, text="URL:").pack(side=tk.LEFT)
+        self.url_var = tk.StringVar(value="Select a product to see details")
+        self.url_entry = ttk.Entry(url_frame, textvariable=self.url_var, state='readonly')
+        self.url_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+
+        ttk.Button(url_frame, text="Copy URL", command=self.copy_url).pack(side=tk.LEFT, padx=2)
+        ttk.Button(url_frame, text="Open in Browser", command=self.open_selected_url).pack(side=tk.LEFT, padx=2)
+
+        # Product info display
+        info_frame = ttk.LabelFrame(right_frame, text="Selected Product", padding="10")
+        info_frame.pack(fill=tk.BOTH, expand=True, pady=5)
+
+        self.product_info = tk.Text(info_frame, wrap=tk.WORD, height=10, font=('Helvetica', 11))
+        self.product_info.pack(fill=tk.BOTH, expand=True)
+        self.product_info.insert('1.0', "Select a product from the list to view details.\n\n"
+                                        "Double-click any row to open the product page.\n\n"
+                                        "Use the 'Quick Store Access' buttons above to open store pages directly.")
+        self.product_info.config(state='disabled')
+
+        # Action buttons for selected product
+        action_frame = ttk.Frame(right_frame)
+        action_frame.pack(fill=tk.X, pady=5)
+
+        self.open_btn = ttk.Button(action_frame, text="Open Product Page", command=self.open_selected_url, state='disabled')
+        self.open_btn.pack(side=tk.LEFT, padx=5)
+
+        self.open_embedded_btn = ttk.Button(action_frame, text="Open in New Window", command=self.open_embedded, state='disabled')
+        self.open_embedded_btn.pack(side=tk.LEFT, padx=5)
 
         # Legend frame
         legend_frame = ttk.Frame(main_frame)
@@ -387,7 +478,6 @@ class GPUCheckerGUI:
 
         ttk.Label(legend_frame, text="Legend:").pack(side=tk.LEFT, padx=5)
 
-        # Legend items
         legends = [
             ('In Stock', '#90EE90'),
             ('Out of Stock', '#FFB6C1'),
@@ -402,7 +492,82 @@ class GPUCheckerGUI:
             canvas.pack(side=tk.LEFT, padx=2)
             ttk.Label(frame, text=text).pack(side=tk.LEFT)
 
-        ttk.Label(legend_frame, text="(Double-click a row to open product page)").pack(side=tk.RIGHT, padx=5)
+        ttk.Label(legend_frame, text="| Double-click to open product page").pack(side=tk.LEFT, padx=20)
+
+    def open_store(self, url, name):
+        """Open a store URL."""
+        if WEBVIEW_AVAILABLE:
+            self.browser.open_url(url, f"RTX 5090 - {name}")
+        else:
+            webbrowser.open(url)
+
+    def open_all_stores(self):
+        """Open all store pages."""
+        for name, url in GPUChecker.STORE_URLS.items():
+            webbrowser.open(url)
+
+    def on_select(self, event):
+        """Handle selection change in treeview."""
+        selection = self.tree.selection()
+        if selection:
+            item_id = selection[0]
+            url = self.item_urls.get(item_id, '')
+            values = self.tree.item(item_id, 'values')
+
+            self.url_var.set(url)
+            self.open_btn.config(state='normal')
+            self.open_embedded_btn.config(state='normal')
+
+            # Update product info
+            self.product_info.config(state='normal')
+            self.product_info.delete('1.0', tk.END)
+
+            info_text = f"Store: {values[0]}\n\n"
+            info_text += f"Product: {values[1]}\n\n"
+            info_text += f"Price: {values[2]}\n\n"
+            info_text += f"Status: {values[3]}\n\n"
+            info_text += f"URL: {url}\n\n"
+            info_text += "Actions:\n"
+            info_text += "• Double-click the row to open in browser\n"
+            info_text += "• Click 'Open in Browser' button\n"
+            info_text += "• Click 'Copy URL' to copy link"
+
+            self.product_info.insert('1.0', info_text)
+            self.product_info.config(state='disabled')
+        else:
+            self.url_var.set("Select a product to see details")
+            self.open_btn.config(state='disabled')
+            self.open_embedded_btn.config(state='disabled')
+
+    def on_double_click(self, event):
+        """Handle double-click on treeview item."""
+        self.open_selected_url()
+
+    def copy_url(self):
+        """Copy current URL to clipboard."""
+        url = self.url_var.get()
+        if url and url != "Select a product to see details":
+            self.root.clipboard_clear()
+            self.root.clipboard_append(url)
+            messagebox.showinfo("Copied", "URL copied to clipboard!")
+
+    def open_selected_url(self):
+        """Open the selected product URL."""
+        url = self.url_var.get()
+        if url and url != "Select a product to see details":
+            webbrowser.open(url)
+
+    def open_embedded(self):
+        """Open URL in embedded browser window."""
+        url = self.url_var.get()
+        if url and url != "Select a product to see details":
+            selection = self.tree.selection()
+            if selection:
+                values = self.tree.item(selection[0], 'values')
+                title = f"{values[0]} - {values[1][:30]}"
+            else:
+                title = "RTX 5090 Product"
+            self.browser.open_url(url, title)
 
     def toggle_checking(self):
         """Toggle automatic checking on/off."""
@@ -444,7 +609,6 @@ class GPUCheckerGUI:
         """Check availability and schedule next check."""
         if not self.is_running:
             return
-
         self.status_var.set("Checking...")
         threading.Thread(target=self._perform_check, daemon=True).start()
 
@@ -461,20 +625,17 @@ class GPUCheckerGUI:
 
     def _update_results(self, results):
         """Update the results display."""
-        # Clear existing items
         for item in self.tree.get_children():
             self.tree.delete(item)
 
         self.item_urls.clear()
 
-        # Add new results
         for result in results:
-            # Determine status text and tag
             if 'error' in result:
                 status = 'Error'
                 tag = 'error'
             elif result['available'] is True:
-                status = 'IN STOCK'
+                status = 'IN STOCK!'
                 tag = 'available'
             elif result['available'] is False:
                 status = 'Out of Stock'
@@ -483,42 +644,34 @@ class GPUCheckerGUI:
                 status = 'Unknown'
                 tag = 'unknown'
 
-            # Insert item
             item_id = self.tree.insert(
                 '',
                 tk.END,
                 values=(result['store'], result['name'], result['price'], status),
                 tags=(tag,)
             )
-
-            # Store URL
             self.item_urls[item_id] = result.get('url', '')
 
-        # Update last check time
         current_time = datetime.now().strftime("%H:%M:%S")
         self.last_check_var.set(f"Last check: {current_time}")
         self.status_var.set("Ready" if not self.is_running else "Running...")
 
+        # Check for in-stock items and notify
+        in_stock = [r for r in results if r.get('available') is True]
+        if in_stock:
+            self.root.bell()  # System beep
+            self.root.attributes('-topmost', True)
+            self.root.attributes('-topmost', False)
+
     def _show_error(self, error_msg):
         """Show an error message."""
         self.status_var.set(f"Error: {error_msg}")
-
-    def open_url(self, event):
-        """Open the product URL when double-clicked."""
-        selection = self.tree.selection()
-        if selection:
-            item_id = selection[0]
-            url = self.item_urls.get(item_id, '')
-            if url:
-                import webbrowser
-                webbrowser.open(url)
 
 
 def main():
     """Main entry point."""
     root = tk.Tk()
 
-    # Set theme
     style = ttk.Style()
     available_themes = style.theme_names()
     if 'clam' in available_themes:
@@ -526,13 +679,11 @@ def main():
 
     app = GPUCheckerGUI(root)
 
-    # Handle window close
     def on_closing():
         app.stop_checking()
         root.destroy()
 
     root.protocol("WM_DELETE_WINDOW", on_closing)
-
     root.mainloop()
 
 
