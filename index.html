@@ -668,6 +668,29 @@
             return match ? parseFloat(match[0]) : Infinity;
         }
 
+        // Check if product is a valid desktop RTX 5090 (not laptop/mobile)
+        function isDesktop5090(name) {
+            const lowerName = name.toLowerCase();
+
+            // Must contain 5090
+            if (!lowerName.includes('5090')) return false;
+
+            // Exclude laptop/mobile variants
+            const excludeTerms = ['laptop', 'mobile', 'notebook', 'gaming laptop', 'legion', 'rog strix g', 'zephyrus', 'raider', 'predator', 'omen', 'alienware m', 'blade 15', 'blade 16', 'blade 17', 'blade 18'];
+            for (const term of excludeTerms) {
+                if (lowerName.includes(term)) return false;
+            }
+
+            // If it mentions "graphics card", "gpu", or common GPU brands, it's likely desktop
+            const gpuTerms = ['graphics card', 'graphics', 'gpu', 'geforce rtx', 'founders edition', 'gaming oc', 'suprim', 'trio', 'aero', 'ventus', 'eagle', 'master', 'xtreme', 'strix', 'tuf gaming'];
+            for (const term of gpuTerms) {
+                if (lowerName.includes(term)) return true;
+            }
+
+            // Default: include if just has 5090 and not explicitly a laptop
+            return true;
+        }
+
         function sortProducts(products) {
             return products.sort((a, b) => {
                 const availA = a.available === true ? 0 : (a.available === null ? 1 : 2);
@@ -790,7 +813,7 @@
                 const json = JSON.parse(data);
                 if (json.products) {
                     for (const p of json.products) {
-                        if (p.name && (p.name.toLowerCase().includes('5090') || p.name.toLowerCase().includes('rtx 50'))) {
+                        if (p.name && isDesktop5090(p.name)) {
                             allProducts.push({
                                 name: p.name,
                                 price: p.salePrice ? `$${p.salePrice.toLocaleString()} CAD` : (p.regularPrice ? `$${p.regularPrice.toLocaleString()} CAD` : 'N/A'),
@@ -823,7 +846,7 @@
 
                     if (titleEl) {
                         const name = titleEl.textContent.trim();
-                        if (name.toLowerCase().includes('5090') || name.toLowerCase().includes('rtx 50')) {
+                        if (isDesktop5090(name)) {
                             let price = 'N/A';
                             if (priceEl) {
                                 const priceMatch = priceEl.textContent.match(/[\d,]+\.?\d*/);
@@ -865,7 +888,7 @@
 
                     if (titleEl) {
                         const name = titleEl.textContent.trim();
-                        if (name.toLowerCase().includes('5090') || name.toLowerCase().includes('rtx 50')) {
+                        if (isDesktop5090(name)) {
                             let price = 'N/A';
                             if (priceWhole) {
                                 price = `$${priceWhole.textContent.trim().replace(/[^\d]/g, '')}`;
@@ -905,7 +928,7 @@
 
                     if (titleEl) {
                         const name = titleEl.textContent.trim();
-                        if (name.toLowerCase().includes('5090') || name.toLowerCase().includes('rtx 50')) {
+                        if (isDesktop5090(name)) {
                             let price = 'N/A';
                             if (priceEl) {
                                 const priceMatch = priceEl.textContent.replace(/,/g, '').match(/[\d.]+/);
@@ -946,7 +969,7 @@
 
                     if (titleEl) {
                         const name = titleEl.textContent.trim();
-                        if (name.toLowerCase().includes('5090') || name.toLowerCase().includes('rtx 50')) {
+                        if (isDesktop5090(name)) {
                             let price = 'N/A';
                             if (priceEl) {
                                 const priceMatch = priceEl.textContent.replace(/,/g, '').match(/[\d.]+/);
