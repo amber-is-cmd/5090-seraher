@@ -128,10 +128,6 @@
             animation: pulse 1.5s infinite;
         }
 
-        .status-dot.error {
-            background: #e53e3e;
-        }
-
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -153,7 +149,62 @@
             text-align: center;
         }
 
-        .store-section {
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4a5568;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #76b900;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .products-section {
             margin: 30px 0;
             background: rgba(255,255,255,0.05);
             border-radius: 15px;
@@ -161,7 +212,7 @@
             border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .store-header {
+        .section-header {
             padding: 20px;
             display: flex;
             justify-content: space-between;
@@ -171,48 +222,14 @@
             gap: 10px;
         }
 
-        .store-title {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .store-name {
+        .section-title {
             font-size: 1.5rem;
             font-weight: 700;
         }
 
-        .store-name.bestbuy { color: #0046be; }
-        .store-name.newegg { color: #f7a000; }
-        .store-name.amazon { color: #ff9900; }
-        .store-name.memoryexpress { color: #e31837; }
-        .store-name.canadacomputers { color: #00a651; }
-
-        .store-status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .store-status.loading {
-            background: #4a5568;
-            color: #fff;
-        }
-
-        .store-status.success {
-            background: #276749;
-            color: #9ae6b4;
-        }
-
-        .store-status.error {
-            background: #742a2a;
-            color: #feb2b2;
-        }
-
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 15px;
             padding: 20px;
         }
@@ -240,15 +257,43 @@
             opacity: 0.7;
         }
 
+        .product-card.out-of-stock.hidden {
+            display: none;
+        }
+
         .product-card.unknown {
             border-left: 4px solid #ecc94b;
         }
 
-        .product-name {
-            font-size: 1rem;
-            font-weight: 600;
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
             margin-bottom: 10px;
+        }
+
+        .store-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .store-badge.bestbuy { background: #0046be; color: white; }
+        .store-badge.newegg { background: #f7a000; color: #1a1a2e; }
+        .store-badge.amazon { background: #ff9900; color: #1a1a2e; }
+        .store-badge.memoryexpress { background: #e31837; color: white; }
+        .store-badge.canadacomputers { background: #00a651; color: white; }
+
+        .product-name {
+            font-size: 0.95rem;
+            font-weight: 600;
             line-height: 1.4;
+            flex-grow: 1;
         }
 
         .product-details {
@@ -313,6 +358,7 @@
             padding: 40px;
             text-align: center;
             color: #888;
+            grid-column: 1 / -1;
         }
 
         .loading-spinner {
@@ -357,6 +403,22 @@
         .summary-label {
             color: #888;
             font-size: 0.9rem;
+        }
+
+        .store-legend {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            color: #aaa;
         }
 
         .notification {
@@ -408,6 +470,33 @@
             margin-top: 30px;
         }
 
+        .quick-links {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .quick-link {
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            text-decoration: none;
+            color: white;
+            transition: transform 0.2s;
+        }
+
+        .quick-link:hover {
+            transform: translateY(-2px);
+        }
+
+        .quick-link.bestbuy { background: #0046be; }
+        .quick-link.newegg { background: #f7a000; color: #1a1a2e; }
+        .quick-link.amazon { background: #ff9900; color: #1a1a2e; }
+        .quick-link.memoryexpress { background: #e31837; }
+        .quick-link.canadacomputers { background: #00a651; }
+
         @media (max-width: 768px) {
             h1 { font-size: 1.8rem; }
             .products-grid { grid-template-columns: 1fr; }
@@ -423,7 +512,7 @@
     <div class="container">
         <header>
             <h1>NVIDIA RTX 5090 Availability Checker</h1>
-            <p class="subtitle">Live monitoring of Canadian retailers - Best Buy, Newegg, Amazon, Memory Express, Canada Computers</p>
+            <p class="subtitle">Live monitoring of Canadian retailers</p>
         </header>
 
         <div class="controls">
@@ -438,6 +527,14 @@
             </button>
         </div>
 
+        <div class="quick-links">
+            <a href="https://www.bestbuy.ca/en-ca/search?search=rtx+5090" target="_blank" class="quick-link bestbuy">Best Buy</a>
+            <a href="https://www.newegg.ca/p/pl?d=rtx+5090" target="_blank" class="quick-link newegg">Newegg</a>
+            <a href="https://www.amazon.ca/s?k=rtx+5090+graphics+card" target="_blank" class="quick-link amazon">Amazon</a>
+            <a href="https://www.memoryexpress.com/Search/Products?Search=rtx+5090" target="_blank" class="quick-link memoryexpress">Memory Express</a>
+            <a href="https://www.canadacomputers.com/search/results_details.php?keywords=rtx+5090" target="_blank" class="quick-link canadacomputers">Canada Computers</a>
+        </div>
+
         <div style="text-align: center; margin: 15px 0; padding: 15px; background: rgba(255,200,0,0.1); border-radius: 10px; border: 1px solid rgba(255,200,0,0.3);">
             <p style="color: #ffd700; margin-bottom: 10px;"><strong>Note:</strong> Most retailers block automated data fetching.</p>
             <p style="color: #aaa;">Click <strong>"OPEN ALL STORES"</strong> to check each store in new tabs - this is the most reliable method!</p>
@@ -446,7 +543,7 @@
         <div class="status-bar">
             <div class="status-indicator">
                 <div class="status-dot" id="statusDot"></div>
-                <span id="statusText">Ready - Click "Check Now" to scan</span>
+                <span id="statusText">Ready - Click "Try Fetch Data" to scan</span>
             </div>
             <div class="timer-input">
                 <label>Check every:</label>
@@ -476,80 +573,38 @@
             </div>
         </div>
 
-        <!-- Best Buy Section -->
-        <div class="store-section">
-            <div class="store-header">
-                <div class="store-title">
-                    <span class="store-name bestbuy">Best Buy Canada</span>
-                    <span class="store-status loading" id="bestbuy-status">Waiting</span>
-                </div>
-                <a href="https://www.bestbuy.ca/en-ca/search?search=rtx+5090" target="_blank" class="btn btn-secondary">Open Store</a>
-            </div>
-            <div class="products-grid" id="bestbuy-products">
-                <div class="no-products">Click "Check Now" to scan for products</div>
-            </div>
+        <div class="toggle-container">
+            <span>Show Out of Stock Cards:</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="showOutOfStock" onchange="toggleOutOfStock()">
+                <span class="toggle-slider"></span>
+            </label>
+            <span id="outOfStockLabel" style="color: #888;">(Hidden)</span>
         </div>
 
-        <!-- Newegg Section -->
-        <div class="store-section">
-            <div class="store-header">
-                <div class="store-title">
-                    <span class="store-name newegg">Newegg Canada</span>
-                    <span class="store-status loading" id="newegg-status">Waiting</span>
-                </div>
-                <a href="https://www.newegg.ca/p/pl?d=rtx+5090" target="_blank" class="btn btn-secondary">Open Store</a>
-            </div>
-            <div class="products-grid" id="newegg-products">
-                <div class="no-products">Click "Check Now" to scan for products</div>
-            </div>
+        <div class="store-legend">
+            <div class="legend-item"><span class="store-badge bestbuy">BB</span> Best Buy</div>
+            <div class="legend-item"><span class="store-badge newegg">NE</span> Newegg</div>
+            <div class="legend-item"><span class="store-badge amazon">AZ</span> Amazon</div>
+            <div class="legend-item"><span class="store-badge memoryexpress">ME</span> Memory Express</div>
+            <div class="legend-item"><span class="store-badge canadacomputers">CC</span> Canada Computers</div>
         </div>
 
-        <!-- Amazon Section -->
-        <div class="store-section">
-            <div class="store-header">
-                <div class="store-title">
-                    <span class="store-name amazon">Amazon Canada</span>
-                    <span class="store-status loading" id="amazon-status">Waiting</span>
-                </div>
-                <a href="https://www.amazon.ca/s?k=rtx+5090+graphics+card" target="_blank" class="btn btn-secondary">Open Store</a>
+        <!-- Unified Products Section -->
+        <div class="products-section">
+            <div class="section-header">
+                <span class="section-title">All RTX 5090 Products</span>
+                <span id="productsStatus" style="color: #888;">Waiting for scan...</span>
             </div>
-            <div class="products-grid" id="amazon-products">
-                <div class="no-products">Click "Check Now" to scan for products</div>
-            </div>
-        </div>
-
-        <!-- Memory Express Section -->
-        <div class="store-section">
-            <div class="store-header">
-                <div class="store-title">
-                    <span class="store-name memoryexpress">Memory Express</span>
-                    <span class="store-status loading" id="memoryexpress-status">Waiting</span>
-                </div>
-                <a href="https://www.memoryexpress.com/Search/Products?Search=rtx+5090" target="_blank" class="btn btn-secondary">Open Store</a>
-            </div>
-            <div class="products-grid" id="memoryexpress-products">
-                <div class="no-products">Click "Check Now" to scan for products</div>
-            </div>
-        </div>
-
-        <!-- Canada Computers Section -->
-        <div class="store-section">
-            <div class="store-header">
-                <div class="store-title">
-                    <span class="store-name canadacomputers">Canada Computers</span>
-                    <span class="store-status loading" id="canadacomputers-status">Waiting</span>
-                </div>
-                <a href="https://www.canadacomputers.com/search/results_details.php?keywords=rtx+5090" target="_blank" class="btn btn-secondary">Open Store</a>
-            </div>
-            <div class="products-grid" id="canadacomputers-products">
-                <div class="no-products">Click "Check Now" to scan for products</div>
+            <div class="products-grid" id="all-products">
+                <div class="no-products">Click "Try Fetch Data" to scan all stores for products</div>
             </div>
         </div>
 
         <footer>
             <p>RTX 5090 Availability Checker for Canada</p>
             <p style="margin-top: 10px; font-size: 0.9rem;">
-                Data fetched via CORS proxy. Results update in real-time.
+                Data fetched via CORS proxy. Sorted by availability then price.
             </p>
         </footer>
     </div>
@@ -571,140 +626,86 @@
             bestbuy: {
                 name: 'Best Buy Canada',
                 url: 'https://www.bestbuy.ca/en-ca/search?search=rtx+5090',
-                apiUrl: 'https://www.bestbuy.ca/api/v2/json/search?query=rtx%205090&lang=en-CA'
+                apiUrl: 'https://www.bestbuy.ca/api/v2/json/search?query=rtx%205090&lang=en-CA',
+                badge: 'BB',
+                class: 'bestbuy'
             },
             newegg: {
                 name: 'Newegg Canada',
-                url: 'https://www.newegg.ca/p/pl?d=rtx+5090'
+                url: 'https://www.newegg.ca/p/pl?d=rtx+5090',
+                badge: 'NE',
+                class: 'newegg'
             },
             amazon: {
                 name: 'Amazon Canada',
-                url: 'https://www.amazon.ca/s?k=rtx+5090+graphics+card'
+                url: 'https://www.amazon.ca/s?k=rtx+5090+graphics+card',
+                badge: 'AZ',
+                class: 'amazon'
             },
             memoryexpress: {
                 name: 'Memory Express',
-                url: 'https://www.memoryexpress.com/Search/Products?Search=rtx+5090'
+                url: 'https://www.memoryexpress.com/Search/Products?Search=rtx+5090',
+                badge: 'ME',
+                class: 'memoryexpress'
             },
             canadacomputers: {
                 name: 'Canada Computers',
-                url: 'https://www.canadacomputers.com/search/results_details.php?keywords=rtx+5090'
+                url: 'https://www.canadacomputers.com/search/results_details.php?keywords=rtx+5090',
+                badge: 'CC',
+                class: 'canadacomputers'
             }
         };
 
-        // Parse price string to number for sorting
+        let isRunning = false;
+        let countdownId = null;
+        let secondsLeft = 0;
+        let allProducts = [];
+        let showOutOfStockItems = false;
+
         function parsePrice(priceStr) {
             if (!priceStr || priceStr === 'N/A' || priceStr === 'Check Store') return Infinity;
             const match = priceStr.replace(/,/g, '').match(/[\d.]+/);
             return match ? parseFloat(match[0]) : Infinity;
         }
 
-        // Sort products: in-stock cheapest first, then unknown, then out-of-stock cheapest first
         function sortProducts(products) {
             return products.sort((a, b) => {
-                // Priority: in-stock (true) > unknown (null) > out-of-stock (false)
                 const availA = a.available === true ? 0 : (a.available === null ? 1 : 2);
                 const availB = b.available === true ? 0 : (b.available === null ? 1 : 2);
-
-                if (availA !== availB) {
-                    return availA - availB;
-                }
-
-                // Within same availability, sort by price (cheapest first)
+                if (availA !== availB) return availA - availB;
                 return parsePrice(a.price) - parsePrice(b.price);
             });
         }
 
-        let isRunning = false;
-        let intervalId = null;
-        let countdownId = null;
-        let secondsLeft = 0;
-        let totalInStock = 0;
-        let totalOutOfStock = 0;
-        let totalProducts = 0;
-
         async function fetchWithProxy(url) {
             let lastError;
-
             for (let i = 0; i < CORS_PROXIES.length; i++) {
                 const proxy = CORS_PROXIES[i];
-                const fullUrl = proxy.encode
-                    ? proxy.url + encodeURIComponent(url)
-                    : proxy.url + url;
-
+                const fullUrl = proxy.encode ? proxy.url + encodeURIComponent(url) : proxy.url + url;
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 8000);
-
                     const response = await fetch(fullUrl, {
                         signal: controller.signal,
-                        headers: {
-                            'Accept': 'text/html,application/json,*/*'
-                        }
+                        headers: { 'Accept': 'text/html,application/json,*/*' }
                     });
-
                     clearTimeout(timeoutId);
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const text = await response.text();
-                    if (text && text.length > 100) {
-                        return text;
-                    }
+                    if (text && text.length > 100) return text;
                     throw new Error('Empty response');
                 } catch (e) {
-                    console.log(`Proxy ${i} failed for ${url}:`, e.message);
+                    console.log(`Proxy ${i} failed:`, e.message);
                     lastError = e;
                 }
             }
-
             throw lastError || new Error('All proxies failed');
         }
 
-        function setStoreStatus(store, status, message) {
-            const el = document.getElementById(`${store}-status`);
-            el.className = `store-status ${status}`;
-            el.textContent = message;
-        }
-
-        function renderProducts(store, products) {
-            const container = document.getElementById(`${store}-products`);
-
-            if (products.length === 0) {
-                container.innerHTML = '<div class="no-products">No RTX 5090 products found</div>';
-                return;
-            }
-
-            // Sort products: in-stock cheapest first, out-of-stock at bottom
-            const sortedProducts = sortProducts(products);
-
-            container.innerHTML = sortedProducts.map(p => {
-                let statusClass = 'unknown';
-                let statusText = 'Check Store';
-
-                if (p.available === true) {
-                    statusClass = 'in-stock';
-                    statusText = 'IN STOCK';
-                    totalInStock++;
-                } else if (p.available === false) {
-                    statusClass = 'out-of-stock';
-                    statusText = 'Out of Stock';
-                    totalOutOfStock++;
-                }
-                totalProducts++;
-
-                return `
-                    <div class="product-card ${statusClass}">
-                        <div class="product-name">${escapeHtml(p.name)}</div>
-                        <div class="product-details">
-                            <span class="product-price ${p.price === 'N/A' ? 'no-price' : ''}">${p.price}</span>
-                            <span class="product-status ${statusClass}">${statusText}</span>
-                        </div>
-                        <a href="${p.url}" target="_blank" class="product-link">View Product →</a>
-                    </div>
-                `;
-            }).join('');
+        function toggleOutOfStock() {
+            showOutOfStockItems = document.getElementById('showOutOfStock').checked;
+            document.getElementById('outOfStockLabel').textContent = showOutOfStockItems ? '(Shown)' : '(Hidden)';
+            renderAllProducts();
         }
 
         function escapeHtml(text) {
@@ -713,69 +714,107 @@
             return div.innerHTML;
         }
 
-        async function checkBestBuy() {
-            setStoreStatus('bestbuy', 'loading', 'Checking...');
+        function renderAllProducts() {
+            const container = document.getElementById('all-products');
+            const sorted = sortProducts([...allProducts]);
 
-            try {
-                // Try API first
-                const data = await fetchWithProxy(stores.bestbuy.apiUrl);
-                let products = [];
+            const filtered = showOutOfStockItems ? sorted : sorted.filter(p => p.available !== false);
 
-                try {
-                    const json = JSON.parse(data);
-                    if (json.products) {
-                        for (const p of json.products) {
-                            if (p.name && (p.name.toLowerCase().includes('5090') || p.name.toLowerCase().includes('rtx 50'))) {
-                                products.push({
-                                    name: p.name,
-                                    price: p.salePrice ? `$${p.salePrice.toLocaleString()} CAD` : (p.regularPrice ? `$${p.regularPrice.toLocaleString()} CAD` : 'N/A'),
-                                    available: p.isAvailableOnline || p.isAvailable || false,
-                                    url: `https://www.bestbuy.ca${p.productUrl || ''}`
-                                });
-                            }
-                        }
-                    }
-                } catch (parseErr) {
-                    // If JSON parse fails, try HTML parsing
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(data, 'text/html');
-                    const items = doc.querySelectorAll('[class*="product"], [class*="item"]');
-                    items.forEach(item => {
-                        const text = item.textContent;
-                        if (text.toLowerCase().includes('5090')) {
-                            const priceMatch = text.match(/\$[\d,]+\.?\d*/);
-                            products.push({
-                                name: text.substring(0, 80).trim(),
-                                price: priceMatch ? priceMatch[0] + ' CAD' : 'N/A',
-                                available: null,
-                                url: stores.bestbuy.url
-                            });
-                        }
-                    });
+            if (filtered.length === 0 && allProducts.length === 0) {
+                container.innerHTML = '<div class="no-products">No products found. Try clicking "OPEN ALL STORES" to check manually.</div>';
+                return;
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="no-products">No in-stock products found. Toggle "Show Out of Stock" to see all products.</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(p => {
+                let statusClass = 'unknown';
+                let statusText = 'Check Store';
+
+                if (p.available === true) {
+                    statusClass = 'in-stock';
+                    statusText = 'IN STOCK';
+                } else if (p.available === false) {
+                    statusClass = 'out-of-stock';
+                    statusText = 'Out of Stock';
                 }
 
-                renderProducts('bestbuy', products);
-                setStoreStatus('bestbuy', 'success', `Found ${products.length} products`);
+                const hiddenClass = (p.available === false && !showOutOfStockItems) ? ' hidden' : '';
+
+                return `
+                    <div class="product-card ${statusClass}${hiddenClass}">
+                        <div class="product-header">
+                            <div class="product-name">${escapeHtml(p.name)}</div>
+                            <span class="store-badge ${p.storeClass}">${p.storeBadge}</span>
+                        </div>
+                        <div class="product-details">
+                            <span class="product-price ${p.price === 'N/A' ? 'no-price' : ''}">${p.price}</span>
+                            <span class="product-status ${statusClass}">${statusText}</span>
+                        </div>
+                        <a href="${p.url}" target="_blank" class="product-link">View at ${p.storeName} →</a>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateSummary() {
+            const inStock = allProducts.filter(p => p.available === true).length;
+            const outOfStock = allProducts.filter(p => p.available === false).length;
+            document.getElementById('inStockCount').textContent = inStock;
+            document.getElementById('outOfStockCount').textContent = outOfStock;
+            document.getElementById('totalCount').textContent = allProducts.length;
+
+            if (inStock > 0) {
+                document.getElementById('alertBanner').classList.add('show');
+                if (Notification.permission === 'granted') {
+                    new Notification('RTX 5090 IN STOCK!', {
+                        body: `${inStock} products available in Canada!`,
+                        icon: 'https://www.nvidia.com/favicon.ico'
+                    });
+                }
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1sbGxscHBwc3Nzc3R0dHV1dXZ2dnd3d3h4eHl5eXp6ent7e3x8fH19fX5+fn9/f4CAgIGBgYKCgoODg4SEhIWFhYaGhoeHh4iIiImJiYqKiouLi4yMjI2NjY6Ojo+Pj5CQkJGRkZKSkpOTk5SUlJWVlZaWlpeXl5iYmJmZmZqampubm5ycnJ2dnZ6enp+fn6CgoKGhoaKioqOjo6SkpKWlpaampqenp6ioqKmpqaqqqqurq6ysrK2tra6urq+vr7CwsLGxsbKysrOzs7S0tLW1tba2tre3t7i4uLm5ubq6uru7u7y8vL29vb6+vr+/v8DAwMHBwcLCwsPDw8TExMXFxcbGxsfHx8jIyMnJycrKysvLy8zMzM3Nzc7Ozs/Pz9DQ0NHR0dLS0tPT09TU1NXV1dbW1tfX19jY2NnZ2dra2tvb29zc3N3d3d7e3t/f3+Dg4OHh4eLi4uPj4+Tk5OXl5ebm5ufn5+jo6Onp6erq6uvr6+zs7O3t7e7u7u/v7/Dw8PHx8fLy8vPz8/T09PX19fb29vf39/j4+Pn5+fr6+vv7+/z8/P39/f7+/v///w==');
+                    audio.play();
+                } catch (e) {}
+            } else {
+                document.getElementById('alertBanner').classList.remove('show');
+            }
+        }
+
+        async function checkBestBuy() {
+            try {
+                const data = await fetchWithProxy(stores.bestbuy.apiUrl);
+                const json = JSON.parse(data);
+                if (json.products) {
+                    for (const p of json.products) {
+                        if (p.name && (p.name.toLowerCase().includes('5090') || p.name.toLowerCase().includes('rtx 50'))) {
+                            allProducts.push({
+                                name: p.name,
+                                price: p.salePrice ? `$${p.salePrice.toLocaleString()} CAD` : (p.regularPrice ? `$${p.regularPrice.toLocaleString()} CAD` : 'N/A'),
+                                available: p.isAvailableOnline || p.isAvailable || false,
+                                url: `https://www.bestbuy.ca${p.productUrl || ''}`,
+                                storeName: stores.bestbuy.name,
+                                storeBadge: stores.bestbuy.badge,
+                                storeClass: stores.bestbuy.class
+                            });
+                        }
+                    }
+                }
+                return true;
             } catch (e) {
                 console.error('Best Buy error:', e);
-                setStoreStatus('bestbuy', 'error', 'Proxy blocked - Open store');
-                document.getElementById('bestbuy-products').innerHTML = `
-                    <div class="no-products">
-                        Retailers block automated requests.<br><br>
-                        <a href="${stores.bestbuy.url}" target="_blank" class="btn btn-primary" style="text-decoration:none;">Open Best Buy Canada</a>
-                    </div>`;
+                return false;
             }
         }
 
         async function checkNewegg() {
-            setStoreStatus('newegg', 'loading', 'Checking...');
-
             try {
                 const html = await fetchWithProxy(stores.newegg.url);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-
-                const products = [];
                 const items = doc.querySelectorAll('.item-cell, .item-container, [class*="item-cell"], .item-info');
 
                 items.forEach(item => {
@@ -790,68 +829,37 @@
                                 const priceMatch = priceEl.textContent.match(/[\d,]+\.?\d*/);
                                 if (priceMatch) price = `$${priceMatch[0]} CAD`;
                             }
-
                             const outOfStock = item.textContent.toLowerCase().includes('out of stock') ||
                                               item.textContent.toLowerCase().includes('sold out');
-
-                            products.push({
+                            allProducts.push({
                                 name: name.substring(0, 100),
                                 price: price,
                                 available: !outOfStock && price !== 'N/A',
-                                url: titleEl.href || stores.newegg.url
+                                url: titleEl.href || stores.newegg.url,
+                                storeName: stores.newegg.name,
+                                storeBadge: stores.newegg.badge,
+                                storeClass: stores.newegg.class
                             });
                         }
                     }
                 });
-
-                // Also check for JSON data in page
-                const scripts = doc.querySelectorAll('script');
-                scripts.forEach(script => {
-                    try {
-                        if (script.textContent && script.textContent.includes('5090')) {
-                            const matches = script.textContent.match(/"Title":"([^"]*5090[^"]*)"/gi);
-                            if (matches && products.length === 0) {
-                                matches.forEach(m => {
-                                    const name = m.replace(/"Title":"/, '').replace(/"$/, '');
-                                    products.push({
-                                        name: name.substring(0, 100),
-                                        price: 'Check Store',
-                                        available: null,
-                                        url: stores.newegg.url
-                                    });
-                                });
-                            }
-                        }
-                    } catch (e) {}
-                });
-
-                renderProducts('newegg', products);
-                setStoreStatus('newegg', 'success', `Found ${products.length} products`);
+                return true;
             } catch (e) {
                 console.error('Newegg error:', e);
-                setStoreStatus('newegg', 'error', 'Proxy blocked - Open store');
-                document.getElementById('newegg-products').innerHTML = `
-                    <div class="no-products">
-                        Retailers block automated requests.<br><br>
-                        <a href="${stores.newegg.url}" target="_blank" class="btn btn-primary" style="text-decoration:none;">Open Newegg Canada</a>
-                    </div>`;
+                return false;
             }
         }
 
         async function checkAmazon() {
-            setStoreStatus('amazon', 'loading', 'Checking...');
-
             try {
                 const html = await fetchWithProxy(stores.amazon.url);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-
-                const products = [];
                 const items = doc.querySelectorAll('[data-component-type="s-search-result"], .s-result-item, [data-asin]');
 
                 items.forEach(item => {
                     const titleEl = item.querySelector('h2 span, .a-text-normal, [class*="title"]');
-                    const priceWhole = item.querySelector('.a-price-whole, [class*="price"] [class*="whole"]');
+                    const priceWhole = item.querySelector('.a-price-whole');
                     const priceFraction = item.querySelector('.a-price-fraction');
                     const linkEl = item.querySelector('a.a-link-normal, a[href*="/dp/"]');
 
@@ -861,46 +869,34 @@
                             let price = 'N/A';
                             if (priceWhole) {
                                 price = `$${priceWhole.textContent.trim().replace(/[^\d]/g, '')}`;
-                                if (priceFraction) {
-                                    price += '.' + priceFraction.textContent.trim();
-                                }
+                                if (priceFraction) price += '.' + priceFraction.textContent.trim();
                                 price += ' CAD';
                             }
-
                             const unavailable = item.textContent.toLowerCase().includes('currently unavailable');
-
-                            products.push({
+                            allProducts.push({
                                 name: name.substring(0, 100),
                                 price: price,
                                 available: !unavailable && price !== 'N/A',
-                                url: linkEl ? `https://www.amazon.ca${linkEl.getAttribute('href')}` : stores.amazon.url
+                                url: linkEl ? `https://www.amazon.ca${linkEl.getAttribute('href')}` : stores.amazon.url,
+                                storeName: stores.amazon.name,
+                                storeBadge: stores.amazon.badge,
+                                storeClass: stores.amazon.class
                             });
                         }
                     }
                 });
-
-                renderProducts('amazon', products);
-                setStoreStatus('amazon', 'success', `Found ${products.length} products`);
+                return true;
             } catch (e) {
                 console.error('Amazon error:', e);
-                setStoreStatus('amazon', 'error', 'Proxy blocked - Open store');
-                document.getElementById('amazon-products').innerHTML = `
-                    <div class="no-products">
-                        Retailers block automated requests.<br><br>
-                        <a href="${stores.amazon.url}" target="_blank" class="btn btn-primary" style="text-decoration:none;">Open Amazon Canada</a>
-                    </div>`;
+                return false;
             }
         }
 
         async function checkMemoryExpress() {
-            setStoreStatus('memoryexpress', 'loading', 'Checking...');
-
             try {
                 const html = await fetchWithProxy(stores.memoryexpress.url);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-
-                const products = [];
                 const items = doc.querySelectorAll('.c-shca-icon-item, .c-shca-list-item, [class*="product"]');
 
                 items.forEach(item => {
@@ -915,43 +911,33 @@
                                 const priceMatch = priceEl.textContent.replace(/,/g, '').match(/[\d.]+/);
                                 if (priceMatch) price = `$${parseFloat(priceMatch[0]).toLocaleString()} CAD`;
                             }
-
                             const outOfStock = item.textContent.toLowerCase().includes('out of stock') ||
                                               item.textContent.toLowerCase().includes('sold out') ||
                                               item.textContent.toLowerCase().includes('backorder');
-
-                            products.push({
+                            allProducts.push({
                                 name: name.substring(0, 100),
                                 price: price,
                                 available: !outOfStock && price !== 'N/A',
-                                url: titleEl.href || stores.memoryexpress.url
+                                url: titleEl.href || stores.memoryexpress.url,
+                                storeName: stores.memoryexpress.name,
+                                storeBadge: stores.memoryexpress.badge,
+                                storeClass: stores.memoryexpress.class
                             });
                         }
                     }
                 });
-
-                renderProducts('memoryexpress', products);
-                setStoreStatus('memoryexpress', 'success', `Found ${products.length} products`);
+                return true;
             } catch (e) {
                 console.error('Memory Express error:', e);
-                setStoreStatus('memoryexpress', 'error', 'Proxy blocked - Open store');
-                document.getElementById('memoryexpress-products').innerHTML = `
-                    <div class="no-products">
-                        Retailers block automated requests.<br><br>
-                        <a href="${stores.memoryexpress.url}" target="_blank" class="btn btn-primary" style="text-decoration:none;">Open Memory Express</a>
-                    </div>`;
+                return false;
             }
         }
 
         async function checkCanadaComputers() {
-            setStoreStatus('canadacomputers', 'loading', 'Checking...');
-
             try {
                 const html = await fetchWithProxy(stores.canadacomputers.url);
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-
-                const products = [];
                 const items = doc.querySelectorAll('.productTemplate, .product-item, [class*="product"]');
 
                 items.forEach(item => {
@@ -966,43 +952,35 @@
                                 const priceMatch = priceEl.textContent.replace(/,/g, '').match(/[\d.]+/);
                                 if (priceMatch) price = `$${parseFloat(priceMatch[0]).toLocaleString()} CAD`;
                             }
-
                             const outOfStock = item.textContent.toLowerCase().includes('out of stock') ||
                                               item.textContent.toLowerCase().includes('sold out') ||
                                               item.textContent.toLowerCase().includes('not available');
-
-                            products.push({
+                            allProducts.push({
                                 name: name.substring(0, 100),
                                 price: price,
                                 available: !outOfStock && price !== 'N/A',
-                                url: titleEl.href || stores.canadacomputers.url
+                                url: titleEl.href || stores.canadacomputers.url,
+                                storeName: stores.canadacomputers.name,
+                                storeBadge: stores.canadacomputers.badge,
+                                storeClass: stores.canadacomputers.class
                             });
                         }
                     }
                 });
-
-                renderProducts('canadacomputers', products);
-                setStoreStatus('canadacomputers', 'success', `Found ${products.length} products`);
+                return true;
             } catch (e) {
                 console.error('Canada Computers error:', e);
-                setStoreStatus('canadacomputers', 'error', 'Proxy blocked - Open store');
-                document.getElementById('canadacomputers-products').innerHTML = `
-                    <div class="no-products">
-                        Retailers block automated requests.<br><br>
-                        <a href="${stores.canadacomputers.url}" target="_blank" class="btn btn-primary" style="text-decoration:none;">Open Canada Computers</a>
-                    </div>`;
+                return false;
             }
         }
 
         async function checkAllStores() {
-            totalInStock = 0;
-            totalOutOfStock = 0;
-            totalProducts = 0;
-
+            allProducts = [];
             document.getElementById('statusText').innerHTML = '<span class="loading-spinner"></span>Checking all stores...';
             document.getElementById('statusDot').classList.add('running');
+            document.getElementById('productsStatus').textContent = 'Scanning...';
 
-            await Promise.all([
+            const results = await Promise.all([
                 checkBestBuy(),
                 checkNewegg(),
                 checkAmazon(),
@@ -1010,40 +988,18 @@
                 checkCanadaComputers()
             ]);
 
-            // Update summary
-            document.getElementById('inStockCount').textContent = totalInStock;
-            document.getElementById('outOfStockCount').textContent = totalOutOfStock;
-            document.getElementById('totalCount').textContent = totalProducts;
+            const successCount = results.filter(r => r).length;
+            document.getElementById('productsStatus').textContent = `${successCount}/5 stores responded • ${allProducts.length} products found`;
 
-            // Update last check time
+            renderAllProducts();
+            updateSummary();
+
             const now = new Date();
             document.getElementById('lastCheck').textContent = `Last check: ${now.toLocaleTimeString()}`;
 
             if (!isRunning) {
                 document.getElementById('statusDot').classList.remove('running');
                 document.getElementById('statusText').textContent = 'Check complete';
-            }
-
-            // Alert if in stock
-            if (totalInStock > 0) {
-                document.getElementById('alertBanner').classList.add('show');
-                showNotification(`${totalInStock} RTX 5090 IN STOCK!`, false);
-
-                // Try browser notification
-                if (Notification.permission === 'granted') {
-                    new Notification('RTX 5090 IN STOCK!', {
-                        body: `${totalInStock} products available in Canada!`,
-                        icon: 'https://www.nvidia.com/favicon.ico'
-                    });
-                }
-
-                // Play sound
-                try {
-                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1sbGxscHBwc3Nzc3R0dHV1dXZ2dnd3d3h4eHl5eXp6ent7e3x8fH19fX5+fn9/f4CAgIGBgYKCgoODg4SEhIWFhYaGhoeHh4iIiImJiYqKiouLi4yMjI2NjY6Ojo+Pj5CQkJGRkZKSkpOTk5SUlJWVlZaWlpeXl5iYmJmZmZqampubm5ycnJ2dnZ6enp+fn6CgoKGhoaKioqOjo6SkpKWlpaampqenp6ioqKmpqaqqqqurq6ysrK2tra6urq+vr7CwsLGxsbKysrOzs7S0tLW1tba2tre3t7i4uLm5ubq6uru7u7y8vL29vb6+vr+/v8DAwMHBwcLCwsPDw8TExMXFxcbGxsfHx8jIyMnJycrKysvLy8zMzM3Nzc7Ozs/Pz9DQ0NHR0dLS0tPT09TU1NXV1dbW1tfX19jY2NnZ2dra2tvb29zc3N3d3d7e3t/f3+Dg4OHh4eLi4uPj4+Tk5OXl5ebm5ufn5+jo6Onp6erq6uvr6+zs7O3t7e7u7u/v7/Dw8PHx8fLy8vPz8/T09PX19fb29vf39/j4+Pn5+fr6+vv7+/z8/P39/f7+/v///w==');
-                    audio.play();
-                } catch (e) {}
-            } else {
-                document.getElementById('alertBanner').classList.remove('show');
             }
         }
 
@@ -1077,7 +1033,6 @@
             countdownId = setInterval(() => {
                 secondsLeft--;
                 document.getElementById('countdown').textContent = `Next check: ${secondsLeft}s`;
-
                 if (secondsLeft <= 0) {
                     secondsLeft = interval;
                     checkAllStores();
@@ -1087,9 +1042,7 @@
 
         function stopChecking() {
             isRunning = false;
-
             if (countdownId) clearInterval(countdownId);
-
             document.getElementById('startBtn').textContent = 'Start Auto-Check (1s)';
             document.getElementById('startBtn').classList.remove('btn-danger');
             document.getElementById('startBtn').classList.add('btn-primary');
@@ -1103,13 +1056,9 @@
             notif.textContent = message;
             notif.classList.toggle('error', isError);
             notif.classList.add('show');
-
-            setTimeout(() => {
-                notif.classList.remove('show');
-            }, 3000);
+            setTimeout(() => notif.classList.remove('show'), 3000);
         }
 
-        // Request notification permission on load
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
         }
